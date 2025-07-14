@@ -1,0 +1,24 @@
+openapi: 3.0.3
+info:
+  title: File Service API
+  version: 1.0.0
+  description: API for managing archived weather data in MongoDB.
+paths:
+  /archive/count:
+    get:
+      summary: Get the number of archived documents
+      responses:
+        '200':
+          description: The current number of documents in the collection.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documentCount:
+                    type: integer
+                    format: int64
+                    description: Total number of documents in the MongoDB database.
+                    example: 157
+        '500':
+          description: Internal server error (e.g., problem connecting to MongoDB).

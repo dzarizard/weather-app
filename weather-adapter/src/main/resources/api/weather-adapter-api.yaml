@@ -1,0 +1,28 @@
+openapi: 3.0.3
+info:
+  title: Weather Adapter API
+  version: 1.0.0
+  description: Adapter for communicating with an external weather API.
+paths:
+  /adapter/weather:
+    get:
+      summary: Get raw weather data from the external API
+      parameters:
+        - name: city
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The name of the city to search for.
+      responses:
+        '200':
+          description: Successfully retrieved weather data.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The full, raw JSON response from the external API.
+        '400':
+          description: Bad request (e.g., 'city' parameter is missing).
+        '502':
+          description: Error communicating with the external API.
