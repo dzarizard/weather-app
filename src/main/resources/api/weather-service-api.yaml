@@ -1,0 +1,93 @@
+openapi: 3.0.3
+info:
+  title: Weather Service API
+  version: 1.0.0
+  description: API for fetching weather data and managing query history.
+paths:
+  /weather:
+    get:
+      summary: Get current weather for a city
+      operationId: getWeather
+      parameters:
+        - name: city
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The name of the city to search for.
+      responses:
+        '200':
+          description: Successfully retrieved weather data.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The full JSON response from the weather adapter service.
+        '400':
+          description: Bad request (e.g., 'city' parameter is missing).
+  /history:
+    get:
+      summary: Get query history
+      operationId: getHistory
+      parameters:
+        - name: city
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter history by city name.
+        - name: dateFrom
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Start of the date range (format DD-MM-YYYY).
+        - name: dateTo
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: End of the date range (format DD-MM-YYYY).
+      responses:
+        '200':
+          description: A list of historical queries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HistoryEntry'
+  /dump:
+    post:
+      summary: Request a dump of historical data to a file
+      operationId: requestDataDump
+      responses:
+        '202':
+          description: The dump request has been accepted and is being processed in the background.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "The data dump process has been initiated."
+
+components:
+  schemas:
+    HistoryEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        city:
+          type: string
+        queryDate:
+          type: string
+          format: date-time
+        weatherResponse:
+          type: object
+          description: The saved JSON response with weather data.

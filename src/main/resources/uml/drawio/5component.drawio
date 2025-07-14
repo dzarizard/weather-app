@@ -1,0 +1,93 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/27.0.9 Chrome/134.0.6998.205 Electron/35.4.0 Safari/537.36" version="27.0.9">
+  <diagram name="Page-1" id="fQanpAvgughzEFU1Z3mA">
+    <mxGraphModel dx="1426" dy="841" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ES01thyVrJIMRqmcqSLf-1" value="WeatherApp" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="630" y="230" width="200" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-2" value="&lt;span style=&quot;font-weight: 400; text-wrap-mode: nowrap;&quot;&gt;WeatherService&lt;/span&gt;" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="ES01thyVrJIMRqmcqSLf-1">
+          <mxGeometry x="40" y="50" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-4" value="&lt;span style=&quot;font-weight: 400; text-wrap-mode: nowrap;&quot;&gt;WeatherAdapter&lt;/span&gt;" style="swimlane;whiteSpace=wrap;html=1;startSize=20;" vertex="1" parent="ES01thyVrJIMRqmcqSLf-1">
+          <mxGeometry x="40" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-5" value="&lt;span style=&quot;font-weight: 400; text-wrap-mode: nowrap;&quot;&gt;FileService&lt;/span&gt;" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="ES01thyVrJIMRqmcqSLf-1">
+          <mxGeometry x="40" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-6" value="MongoDB" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="500" y="470" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-7" value="RDB" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="250" y="470" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-8" value="FileSystem" style="whiteSpace=wrap;html=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="340" y="470" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-9" value="&lt;span style=&quot;font-weight: 400; text-wrap-mode: nowrap;&quot;&gt;OpenWeatherMap&lt;/span&gt;" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="600" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="ES01thyVrJIMRqmcqSLf-12">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="90" y="430" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-23" value="REST" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ES01thyVrJIMRqmcqSLf-13">
+          <mxGeometry x="0.215" y="2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="ES01thyVrJIMRqmcqSLf-12" target="ES01thyVrJIMRqmcqSLf-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-22" value="JDBC" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ES01thyVrJIMRqmcqSLf-14">
+          <mxGeometry x="0.3333" y="-4" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="ES01thyVrJIMRqmcqSLf-12" target="ES01thyVrJIMRqmcqSLf-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-24" value="I/O" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ES01thyVrJIMRqmcqSLf-15">
+          <mxGeometry x="0.3273" y="2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-12" value="WeatherAPI" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="220" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="ES01thyVrJIMRqmcqSLf-16" target="ES01thyVrJIMRqmcqSLf-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-21" value="REST" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ES01thyVrJIMRqmcqSLf-17">
+          <mxGeometry x="-0.1846" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-16" value="AdapterAPI" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="430" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="1" source="ES01thyVrJIMRqmcqSLf-18" target="ES01thyVrJIMRqmcqSLf-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-25" value="I/O" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ES01thyVrJIMRqmcqSLf-19">
+          <mxGeometry x="0.0145" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="ES01thyVrJIMRqmcqSLf-18" target="ES01thyVrJIMRqmcqSLf-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-26" value="Mongo Driver" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ES01thyVrJIMRqmcqSLf-20">
+          <mxGeometry y="3" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ES01thyVrJIMRqmcqSLf-18" value="FileAPI" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="510" y="200" width="40" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
