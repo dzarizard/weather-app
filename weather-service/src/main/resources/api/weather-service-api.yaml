@@ -41,6 +41,7 @@ paths:
                     description: list of historical queries
             operationId: getHistory
             summary: Get query history
+
     /dump:
         post:
             responses:
@@ -48,10 +49,11 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: object
+                                $ref: '#/components/schemas/DumpAcceptedDto'
                     description: The dump request has been accepted and is being processed in the background
             operationId: requestDataDump
             summary: Request a dump of historical data to a file
+
     /weather:
         summary: Get current weather for a city
         get:
@@ -68,17 +70,38 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: object
+                                $ref: '#/components/schemas/WeatherDto'
                     description: Successfully retrieved weather data
                 '400':
                     description: 'Bad request (e.g., ''city'' parameter is missing).'
             operationId: getWeather
             summary: Get current weather for a city
+
 components:
     schemas:
+        WeatherDto:
+            type: object
+            properties:
+                city:
+                    type: string
+                temperature:
+                    type: number
+                description:
+                    type: string
+
+        DumpAcceptedDto:
+            type: object
+            properties:
+                requestId:
+                    type: string
+                    description: Id of the dump request
+                message:
+                    type: string
+                    description: Message
+            required: [requestId]
+
         HistoryEntry:
             description: ''
-            required: []
             type: object
             properties:
                 id:

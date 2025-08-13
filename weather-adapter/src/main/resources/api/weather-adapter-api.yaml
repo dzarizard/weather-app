@@ -7,22 +7,33 @@ paths:
     /adapter/weather:
         get:
             parameters:
-                -
-                    name: city
-                    description: Name of the city to search for
-                    schema:
-                        type: string
-                    in: query
-                    required: true
+                - name: city
+                  description: Name of the city to search for
+                  schema:
+                      type: string
+                  in: query
+                  required: true
             responses:
                 '200':
+                    description: Successfully retrieved weather data
                     content:
                         application/json:
                             schema:
-                                type: object
-                    description: Successfully retrieved weather data
+                                $ref: '#/components/schemas/WeatherDto'
                 '400':
                     description: Bad request (e.g. parameter is missing)
                 '502':
                     description: Error communicating with the external API
             summary: Get raw weather data from the external API
+components:
+    schemas:
+        WeatherDto:
+            type: object
+            properties:
+                city:
+                    type: string
+                temperature:
+                    type: number
+                    format: double
+                description:
+                    type: string
