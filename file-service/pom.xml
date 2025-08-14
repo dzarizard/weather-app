@@ -75,6 +75,22 @@
 			<artifactId>jackson-databind-nullable</artifactId>
 			<version>0.2.6</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.groovy</groupId>
+			<artifactId>groovy</artifactId>
+			<version>4.0.27</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.spockframework</groupId>
+			<artifactId>spock-core</artifactId>
+			<version>2.4-M6-groovy-4.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-test</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -123,6 +139,8 @@
 							<useJakartaEe>true</useJakartaEe>
 							<delegatePattern>true</delegatePattern>
 						</configOptions>
+						<generateApiTests>false</generateApiTests>
+						<generateModelTests>false</generateModelTests>
 					</configuration>
 				</execution>
 			</executions>
