@@ -12,11 +12,11 @@ class AdapterServiceImplSpec extends Specification {
         //given
         String city = "Krakow";
 
-        //when
+        when:
         WeatherDto result = service.getWeather(city)
 
         //then
-        expect:
+        then:
         result != null
         result.city == "Krakow"
         result.temperature != null
@@ -24,11 +24,13 @@ class AdapterServiceImplSpec extends Specification {
     }
 
     def "should throw exception when city is null or empty"() {
-        //when
-        service.getWeather("")
+        when:
+        service.getWeather(bad)
 
-        //then
-        expect:
+        then:
         thrown(IllegalArgumentException)
+
+        where:
+        bad << [null, "", "   "]
     }
 }

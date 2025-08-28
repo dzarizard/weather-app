@@ -4,18 +4,25 @@ import com.dzaro.weather_service.model.DumpAcceptedDto
 import com.dzaro.weather_service.model.WeatherDto
 import com.dzaro.weather_service.service.WeatherServiceImpl
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class WeatherServiceImplSpec extends Specification {
 
     def service = new WeatherServiceImpl()
 
+    @Unroll
+    def "getWeather throws for bad city input"(String bad) {
+        when:
+        service.getWeather(bad)
 
-    def "should return null weather when city is null"() {
-        expect:
-        service.getWeather(null) == null
+        then:
+        thrown(IllegalArgumentException)
+
+        where:
+        bad << [null, "", "   "]
     }
 
-    def "getHistory should return empty list"() {
+    def "getHistory initially is empty"() {
         expect:
         service.getHistory(null, null, null).isEmpty()
     }
@@ -57,5 +64,4 @@ class WeatherServiceImplSpec extends Specification {
         result != null
         result instanceof DumpAcceptedDto
     }
-
 }
