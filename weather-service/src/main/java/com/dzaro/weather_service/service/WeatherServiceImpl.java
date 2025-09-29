@@ -1,5 +1,6 @@
 package com.dzaro.weather_service.service;
 
+import com.dzaro.weather_service.entity.HistoryEntryEntity;
 import com.dzaro.weather_service.model.DumpAcceptedDto;
 import com.dzaro.weather_service.model.HistoryEntry;
 import com.dzaro.weather_service.model.WeatherDto;
@@ -11,9 +12,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class WeatherServiceImpl implements WeatherService {
@@ -24,6 +29,9 @@ public class WeatherServiceImpl implements WeatherService {
     
     @Value("${adapter.base-url}")
     private String adapterBaseUrl;
+
+    @Value("${dump.folder:}")
+    private String dumpFolder;
 
     @Autowired
     public WeatherServiceImpl(WeatherRepository repository, RestTemplate restTemplate) {
@@ -45,10 +53,10 @@ public class WeatherServiceImpl implements WeatherService {
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 WeatherDto weatherDto = response.getBody();
                 
-                HistoryEntry entity = new HistoryEntry();
+                HistoryEntryEntity entity = new HistoryEntryEntity();
                 entity.setCity(city);
                 entity.setQueryDate(OffsetDateTime.now());
-                entity.setWeatherResponse(objectMapper.writeValueAsString(weatherDto));
+                entity.setWeatherResponseJson(objectMapper.writeValueAsString(weatherDto));
                 repository.save(entity);
                 
                 return weatherDto;
@@ -62,19 +70,39 @@ public class WeatherServiceImpl implements WeatherService {
 
     @Override
     public List<HistoryEntry> getHistory(String city, LocalDate from, LocalDate to) {
-        List<HistoryEntry> entities;
+        List<HistoryEntryEntity> entities;
         if (city != null || from != null || to != null) {
             entities = repository.findByCityAndDateRange(city, from, to);
         } else {
             entities = repository.findAll();
         }
         
-        return entities;
+        return entities.stream().map(e -> {
+            HistoryEntry dto = new HistoryEntry();
+            dto.setId(e.getId());
+            dto.setCity(e.getCity());
+            dto.setQueryDate(e.getQueryDate());
+            dto.setWeatherResponse(objectMapper.convertValue(
+                    e.getWeatherResponseJson(), Object.class));
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @Override
     public DumpAcceptedDto requestDataDump() {
-        return null;
+        try {
+            String requestId = UUID.randomUUID().toString();
+            if (dumpFolder == null || dumpFolder.isBlank()) {
+                return new DumpAcceptedDto().requestId(requestId).message("Dump folder not configured");
+            }
+            Path folder = Path.of(dumpFolder);
+            Files.createDirectories(folder);
+            Path out = folder.resolve("dump-" + requestId + ".txt");
+            Files.writeString(out, "dump accepted: " + requestId);
+            return new DumpAcceptedDto().requestId(requestId).message("Dump file created");
+        } catch (Exception e) {
+            return new DumpAcceptedDto().requestId(null).message("Dump failed: " + e.getMessage());
+        }
     }
 
 }
