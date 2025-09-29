@@ -11,12 +11,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class AdapterDelegateImpl implements AdapterApiDelegate {
 
+    private final AdapterService adapterService;
+
+    public AdapterDelegateImpl(AdapterService adapterService) {
+        this.adapterService = adapterService;
+    }
+
     @Override
     public ResponseEntity<WeatherDto> adapterWeatherGet(String city) {
-        WeatherDto dto = new WeatherDto()
-                .city(city)
-                .temperature(25.5)
-                .description("Sunny");
+        WeatherDto dto = adapterService.getWeather(city);
         return ResponseEntity.ok(dto);
     }
 }

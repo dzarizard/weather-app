@@ -74,7 +74,11 @@ public class WeatherServiceImpl implements WeatherService {
 
     @Override
     public DumpAcceptedDto requestDataDump() {
-        return null;
+        DumpAcceptedDto dto = new DumpAcceptedDto();
+        dto.setMessage("Data dump request accepted");
+        dto.setRequestId(java.util.UUID.randomUUID().toString());
+        dto.setStatus("ACCEPTED");
+        return dto;
     }
 
 }
