@@ -3,16 +3,15 @@ package com.dzaro.weather_adapter
 import com.dzaro.weather_adapter.model.WeatherDto
 import com.dzaro.weather_adapter.service.AdapterServiceImpl
 import com.github.tomakehurst.wiremock.WireMockServer
+import static com.github.tomakehurst.wiremock.client.WireMock.*
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 import spock.lang.Specification
 import spock.lang.AutoCleanup
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*
-
 class AdapterServiceImplWireMockSpec extends Specification {
 
-    @AutoCleanup
+    @AutoCleanup("stop")
     WireMockServer wm = new WireMockServer(0)
 
     AdapterServiceImpl service
@@ -28,6 +27,7 @@ class AdapterServiceImplWireMockSpec extends Specification {
         wm.stubFor(get(urlPathEqualTo("/data/2.5/weather"))
                 .withQueryParam("q", equalTo("Paris"))
                 .withQueryParam("appid", matching(".*"))
+                .withQueryParam("units", equalTo("metric"))
                 .willReturn(okJson('{"name":"Paris","main":{"temp":18.5},"weather":[{"description":"Clouds"}]}')))
 
         when:
