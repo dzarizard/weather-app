@@ -1,5 +1,6 @@
 package com.dzaro.weather_service.service;
 
+import com.dzaro.weather_service.entity.WeatherHistoryEntity;
 import com.dzaro.weather_service.model.DumpAcceptedDto;
 import com.dzaro.weather_service.model.HistoryEntry;
 import com.dzaro.weather_service.model.WeatherDto;
@@ -40,15 +41,14 @@ public class WeatherServiceImpl implements WeatherService {
         
         try {
             String url = adapterBaseUrl + "/adapter/weather?city=" + city;
-            ResponseEntity<WeatherDto> response = restTemplate.getForEntity(url, WeatherDto.class);
+            ResponseEntity<WeatherDto> response = restTemplate.getForEntity(url, WeatherDto.class);//todo response to dto
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 WeatherDto weatherDto = response.getBody();
-                
-                HistoryEntry entity = new HistoryEntry();
-                entity.setCity(city);
+                WeatherHistoryEntity entity = new WeatherHistoryEntity();
+                entity.setCity(city);//todo set correct fields from dto
                 entity.setQueryDate(OffsetDateTime.now());
-                entity.setWeatherResponse(objectMapper.writeValueAsString(weatherDto));
+                entity.setWeatherResponseJson(objectMapper.writeValueAsString(weatherDto));
                 repository.save(entity);
                 
                 return weatherDto;
@@ -61,8 +61,8 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     @Override
-    public List<HistoryEntry> getHistory(String city, LocalDate from, LocalDate to) {
-        List<HistoryEntry> entities;
+    public List<WeatherHistoryEntity> getHistory(String city, LocalDate from, LocalDate to) {
+        List<WeatherHistoryEntity> entities;
         if (city != null || from != null || to != null) {
             entities = repository.findByCityAndDateRange(city, from, to);
         } else {
@@ -74,7 +74,7 @@ public class WeatherServiceImpl implements WeatherService {
 
     @Override
     public DumpAcceptedDto requestDataDump() {
-        return null;
+        return new DumpAcceptedDto("Not implemented yet");
     }
 
 }

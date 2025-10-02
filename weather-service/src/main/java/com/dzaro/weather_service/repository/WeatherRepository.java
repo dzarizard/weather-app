@@ -1,6 +1,6 @@
 package com.dzaro.weather_service.repository;
 
-import com.dzaro.weather_service.model.HistoryEntry;
+import com.dzaro.weather_service.entity.WeatherHistoryEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -19,18 +19,18 @@ public class WeatherRepository {
         this.jpaRepository = jpaRepository;
     }
     
-    public void save(HistoryEntry entity) {
+    public void save(WeatherHistoryEntity entity) {
         jpaRepository.save(entity);
     }
     
-    public List<HistoryEntry> findByCityAndDateRange(String city, LocalDate from, LocalDate to) {
+    public List<WeatherHistoryEntity> findByCityAndDateRange(String city, LocalDate from, LocalDate to) {
         OffsetDateTime fromDateTime = from != null ? from.atStartOfDay().atOffset(ZoneOffset.UTC) : null;
         OffsetDateTime toDateTime = to != null ? to.atTime(23, 59, 59).atOffset(ZoneOffset.UTC) : null;
         
         return jpaRepository.findByCityAndDateRange(city, fromDateTime, toDateTime);
     }
     
-    public List<HistoryEntry> findAll() {
+    public List<WeatherHistoryEntity> findAll() {
         return jpaRepository.findAllByOrderByQueryDateDesc();
     }
 }
