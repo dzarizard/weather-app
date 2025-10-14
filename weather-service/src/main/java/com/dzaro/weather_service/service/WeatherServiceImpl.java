@@ -6,7 +6,6 @@ import com.dzaro.weather_service.model.HistoryEntry;
 import com.dzaro.weather_service.model.WeatherDto;
 import com.dzaro.weather_service.repository.WeatherRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,6 +14,8 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class WeatherServiceImpl implements WeatherService {
@@ -26,11 +27,10 @@ public class WeatherServiceImpl implements WeatherService {
     @Value("${adapter.base-url}")
     private String adapterBaseUrl;
 
-    @Autowired
-    public WeatherServiceImpl(WeatherRepository repository, RestTemplate restTemplate) {
+    public WeatherServiceImpl(WeatherRepository repository, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.repository = repository;
         this.restTemplate = restTemplate;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -61,20 +61,26 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     @Override
-    public List<WeatherHistoryEntity> getHistory(String city, LocalDate from, LocalDate to) {
-        List<WeatherHistoryEntity> entities;
-        if (city != null || from != null || to != null) {
-            entities = repository.findByCityAndDateRange(city, from, to);
-        } else {
-            entities = repository.findAll();
-        }
-        
-        return entities;
+    public List<HistoryEntry> getHistory(String city, LocalDate from, LocalDate to) {
+        List<WeatherHistoryEntity> results = (city != null || from != null || to != null)
+                ? repository.findByCityAndDateRange(city, from, to)
+                : repository.findAll();
+
+        return results.stream()
+                .map(this::toDto)
+                .collect(toList());
+    }
+
+    HistoryEntry toDto(WeatherHistoryEntity e) {
+        HistoryEntry dto = new HistoryEntry();
+        dto.setCity(e.getCity());
+        dto.setQueryDate(e.getQueryDate());
+        dto.setWeatherResponse(e.getWeatherResponseJson());
+        return dto;
     }
 
     @Override
     public DumpAcceptedDto requestDataDump() {
         return new DumpAcceptedDto("Not implemented yet");
     }
-
 }

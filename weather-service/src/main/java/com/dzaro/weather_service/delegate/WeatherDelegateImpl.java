@@ -35,8 +35,8 @@ public class WeatherDelegateImpl implements WeatherApiDelegate, HistoryApiDelega
 
     @Override
     public ResponseEntity<List<HistoryEntry>> getHistory(String city, LocalDate dateFrom, LocalDate dateTo) {
-        List<WeatherHistoryEntity> history = service.getHistory(city, dateFrom, dateTo);
-        return ResponseEntity.ok(toDto(history));
+        List<HistoryEntry> history = service.getHistory(city, dateFrom, dateTo);
+        return ResponseEntity.ok(history);
     }
 
     private List<HistoryEntry> toDto(List<WeatherHistoryEntity> history) {
