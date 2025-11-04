@@ -5,19 +5,17 @@ import com.dzaro.weather_adapter.api.AdapterApiDelegate;
 import com.dzaro.weather_adapter.model.WeatherDto;
 import com.dzaro.weather_adapter.service.AdapterService;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClientResponseException;
 
-@Component
-    public class AdapterDelegateImpl implements AdapterApiDelegate {
+@RestController
+@RequiredArgsConstructor
+public class AdapterDelegateImpl implements AdapterApiDelegate {
 
     private final AdapterService adapterService;
-
-    public AdapterDelegateImpl(AdapterService adapterService) {
-        this.adapterService = adapterService;
-    }
 
     @Override
     public ResponseEntity<WeatherDto> adapterWeatherGet(String city) {
