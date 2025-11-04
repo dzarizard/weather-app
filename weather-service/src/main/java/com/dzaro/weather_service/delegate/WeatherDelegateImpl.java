@@ -3,29 +3,25 @@ package com.dzaro.weather_service.delegate;
 import com.dzaro.weather_service.api.DumpApiDelegate;
 import com.dzaro.weather_service.api.HistoryApiDelegate;
 import com.dzaro.weather_service.api.WeatherApiDelegate;
-import com.dzaro.weather_service.entity.WeatherHistoryEntity;
 import com.dzaro.weather_service.model.DumpAcceptedDto;
 import com.dzaro.weather_service.model.HistoryEntry;
 import com.dzaro.weather_service.model.WeatherDto;
-import com.dzaro.weather_service.service.WeatherService;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import com.dzaro.weather_service.service.WeatherServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.NativeWebRequest;
 
-@Component
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequiredArgsConstructor
 public class WeatherDelegateImpl implements WeatherApiDelegate, HistoryApiDelegate, DumpApiDelegate {
 
-    private final WeatherService service;
-
-    public WeatherDelegateImpl(WeatherService service) {
-        this.service = service;
-    }
+    private final WeatherServiceImpl service;
 
     @Override
     public ResponseEntity<WeatherDto> getWeather(String city) {
@@ -37,18 +33,6 @@ public class WeatherDelegateImpl implements WeatherApiDelegate, HistoryApiDelega
     public ResponseEntity<List<HistoryEntry>> getHistory(String city, LocalDate dateFrom, LocalDate dateTo) {
         List<HistoryEntry> history = service.getHistory(city, dateFrom, dateTo);
         return ResponseEntity.ok(history);
-    }
-
-    private List<HistoryEntry> toDto(List<WeatherHistoryEntity> history) {
-        System.out.println("Not implemented yet");
-        HistoryEntry entry1 = new HistoryEntry();
-        entry1.setCity("Paris");
-        entry1.setId(1L);
-        entry1.setWeatherResponse("{ \"temp\": 20, \"condition\": \"Sunny\" }");
-        entry1.setQueryDate(OffsetDateTime.parse("2025-10-01T10:15:30+01:00"));
-        List<HistoryEntry> entries = new ArrayList<>();
-        entries.add(entry1);
-        return entries;
     }
 
     @Override

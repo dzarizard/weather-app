@@ -1,56 +1,52 @@
 package com.dzaro.weather_service.service;
 
-import com.dzaro.weather_service.entity.WeatherHistoryEntity;
+import com.dzaro.weather_service.entity.WeatherRequestHistoryEntity;
 import com.dzaro.weather_service.model.DumpAcceptedDto;
 import com.dzaro.weather_service.model.HistoryEntry;
 import com.dzaro.weather_service.model.WeatherDto;
-import com.dzaro.weather_service.repository.WeatherRepository;
+import com.dzaro.weather_service.repository.WeatherHistoryRequestRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
 @Service
-public class WeatherServiceImpl implements WeatherService {
+@RequiredArgsConstructor
+public class WeatherServiceImpl {
 
-    private final WeatherRepository repository;
+    private final WeatherHistoryRequestRepository historyRequestRepository;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     
     @Value("${adapter.base-url}")
     private String adapterBaseUrl;
 
-    public WeatherServiceImpl(WeatherRepository repository, RestTemplate restTemplate, ObjectMapper objectMapper) {
-        this.repository = repository;
-        this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
-    }
-
-    @Override
     public WeatherDto getWeather(String city) {
         if (city == null || city.trim().isEmpty()) {
             throw new IllegalArgumentException("City cannot be null or empty");
         }
-        
         try {
             String url = adapterBaseUrl + "/adapter/weather?city=" + city;
             ResponseEntity<WeatherDto> response = restTemplate.getForEntity(url, WeatherDto.class);//todo response to dto
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 WeatherDto weatherDto = response.getBody();
-                WeatherHistoryEntity entity = new WeatherHistoryEntity();
-                entity.setCity(city);//todo set correct fields from dto
-                entity.setQueryDate(OffsetDateTime.now());
-                entity.setWeatherResponseJson(objectMapper.writeValueAsString(weatherDto));
-                repository.save(entity);
-                
+                WeatherRequestHistoryEntity weatherRequestHistory = new WeatherRequestHistoryEntity();
+                weatherRequestHistory.setCity(city);
+                weatherRequestHistory.setQueryDate(OffsetDateTime.now());
+                weatherRequestHistory.setWeatherResponseJson(objectMapper.valueToTree(weatherDto));
+                historyRequestRepository.save(weatherRequestHistory);
                 return weatherDto;
             } else {
                 throw new RuntimeException("Failed to fetch weather from adapter service");
@@ -60,18 +56,27 @@ public class WeatherServiceImpl implements WeatherService {
         }
     }
 
-    @Override
     public List<HistoryEntry> getHistory(String city, LocalDate from, LocalDate to) {
-        List<WeatherHistoryEntity> results = (city != null || from != null || to != null)
-                ? repository.findByCityAndDateRange(city, from, to)
-                : repository.findAll();
+        OffsetDateTime min = OffsetDateTime.of(1970,1,1,0,0,0,0,
+                ZoneId.systemDefault().getRules().getOffset(Instant.EPOCH));
+        OffsetDateTime max = OffsetDateTime.now().plusYears(100);
 
-        return results.stream()
+        OffsetDateTime fromTs = (from != null)
+                ? from.atStartOfDay(ZoneId.systemDefault()).toOffsetDateTime()
+                : min;
+
+        OffsetDateTime toTs = (to != null)
+                ? to.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toOffsetDateTime()
+                : max;
+
+        var historyEntries = historyRequestRepository.findByCityAndDateRange(city, fromTs, toTs);
+        return historyEntries
+                .stream()
                 .map(this::toDto)
                 .collect(toList());
     }
 
-    HistoryEntry toDto(WeatherHistoryEntity e) {
+    HistoryEntry toDto(WeatherRequestHistoryEntity e) {
         HistoryEntry dto = new HistoryEntry();
         dto.setCity(e.getCity());
         dto.setQueryDate(e.getQueryDate());
@@ -79,7 +84,6 @@ public class WeatherServiceImpl implements WeatherService {
         return dto;
     }
 
-    @Override
     public DumpAcceptedDto requestDataDump() {
         return new DumpAcceptedDto("Not implemented yet");
     }
