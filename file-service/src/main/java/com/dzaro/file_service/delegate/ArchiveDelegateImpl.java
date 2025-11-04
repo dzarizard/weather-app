@@ -1,21 +1,19 @@
 package com.dzaro.file_service.delegate;
 
 import com.dzaro.file_service.api.ArchiveApiDelegate;
-import com.dzaro.file_service.repository.FileRepository;
+import com.dzaro.file_service.service.ArchiveService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RestController;
 
-@Component
+@RestController
+@RequiredArgsConstructor
 public class ArchiveDelegateImpl implements ArchiveApiDelegate {
 
-    private final FileRepository repo;
-
-    public ArchiveDelegateImpl(FileRepository repo) {
-        this.repo = repo;
-    }
+    private final ArchiveService service;
 
     @Override
     public ResponseEntity<Object> archiveCountGet() {
-        return ResponseEntity.ok(repo.count());
+        return ResponseEntity.ok(service.getArchiveCount());
     }
 }
