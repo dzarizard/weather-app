@@ -8,7 +8,6 @@ import com.dzaro.weather_service.model.HistoryEntry;
 import com.dzaro.weather_service.model.WeatherDto;
 import com.dzaro.weather_service.service.WeatherServiceImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -37,8 +36,8 @@ public class WeatherDelegateImpl implements WeatherApiDelegate, HistoryApiDelega
 
     @Override
     public ResponseEntity<DumpAcceptedDto> requestDataDump() {
-        DumpAcceptedDto dto = service.requestDataDump();
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dto);
+        return ResponseEntity.accepted().body(service.requestDataDump());
+
     }
 
     @Override

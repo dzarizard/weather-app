@@ -25,4 +25,6 @@ JpaSpecificationExecutor<WeatherRequestHistoryEntity>  {
             @Param("fromTs") OffsetDateTime fromTs,
             @Param("toTs") OffsetDateTime toTs
     );
+
+    List<WeatherRequestHistoryEntity> findAllByOrderByQueryDateDesc();
 }

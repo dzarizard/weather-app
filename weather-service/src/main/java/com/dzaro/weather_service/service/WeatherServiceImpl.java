@@ -12,12 +12,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 
 import static java.util.stream.Collectors.toList;
 
@@ -31,6 +37,9 @@ public class WeatherServiceImpl {
     
     @Value("${adapter.base-url}")
     private String adapterBaseUrl;
+
+    @Value("${dump.inbox.dir}")
+    private String dumpFolder;
 
     public WeatherDto getWeather(String city) {
         if (city == null || city.trim().isEmpty()) {
@@ -85,6 +94,26 @@ public class WeatherServiceImpl {
     }
 
     public DumpAcceptedDto requestDataDump() {
-        return new DumpAcceptedDto("Not implemented yet");
+        try {
+            List<HistoryEntry> payload = historyRequestRepository.findAllByOrderByQueryDateDesc()
+                    .stream()
+                    .map(this::toDto)
+                    .toList();
+
+            String requestId = UUID.randomUUID().toString();
+            Path dir = Paths.get(dumpFolder);
+            Files.createDirectories(dir);
+            String filename = "history-" + requestId + ".json";
+            Path file = dir.resolve(filename);
+
+            try (var writer = Files.newBufferedWriter(
+                    file, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW)) {
+                objectMapper.writerWithDefaultPrettyPrinter().writeValue(writer, payload);
+            }
+
+            return new DumpAcceptedDto().requestId(requestId);
+        } catch (Exception e) {
+            throw new RuntimeException("Dump failed: " + e.getMessage(), e);
+        }
     }
 }
