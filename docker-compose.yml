@@ -1,0 +1,74 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: weather-postgres
+    environment:
+      POSTGRES_DB: weatherdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:7
+    container_name: weather-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: weather
+      MONGO_INITDB_ROOT_PASSWORD: weather
+      MONGO_INITDB_DATABASE: weatherdb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  weather-adapter:
+    build: ./weather-adapter
+    container_name: weather-adapter
+    environment:
+      SERVER_PORT: 8081
+      ADAPTER_EXTERNAL_BASE_URL: https://api.openweathermap.org
+      ADAPTER_EXTERNAL_API_KEY: 68b5417b7e7860f81645a747ce6a521a
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+
+  weather-service:
+    build: ./weather-service
+    container_name: weather-service
+    environment:
+      SERVER_PORT: 8080
+      ADAPTER_BASE_URL: http://weather-adapter:8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/weatherdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      DUMP_INBOX_DIR: /inbox
+    volumes:
+      - ./inbox:/inbox
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - weather-adapter
+
+  file-service:
+    build: ./file-service
+    container_name: file-service
+    environment:
+      SERVER_PORT: 8082
+      ARCHIVE_INBOX_DIR: /inbox
+      SPRING_DATA_MONGODB_URI: mongodb://weather:weather@mongo:27017/weatherdb?authSource=admin
+    volumes:
+      - ./inbox:/inbox
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mongo
+
+volumes:
+  pg-data:
+  mongo-data:

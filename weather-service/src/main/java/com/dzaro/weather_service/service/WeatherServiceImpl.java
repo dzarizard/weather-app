@@ -47,7 +47,7 @@ public class WeatherServiceImpl {
         }
         try {
             String url = adapterBaseUrl + "/adapter/weather?city=" + city;
-            ResponseEntity<WeatherDto> response = restTemplate.getForEntity(url, WeatherDto.class);//todo response to dto
+            ResponseEntity<WeatherDto> response = restTemplate.getForEntity(url, WeatherDto.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 WeatherDto weatherDto = response.getBody();
