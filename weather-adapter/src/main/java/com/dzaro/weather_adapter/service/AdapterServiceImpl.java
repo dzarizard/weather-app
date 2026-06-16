@@ -1,6 +1,8 @@
 package com.dzaro.weather_adapter.service;
 
 import com.dzaro.weather_adapter.model.WeatherDto;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.retry.Retry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -8,20 +10,26 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
+import java.util.function.Supplier;
 
 @Service
 public class AdapterServiceImpl implements AdapterService {
 
     private final RestTemplate restTemplate;
+    private final CircuitBreaker weatherApiCircuitBreaker;
+    private final Retry weatherApiRetry;
     private final String baseUrl;
     private final String apiKey;
 
-    public AdapterServiceImpl(RestTemplate restTemplate,
-                              @Value("${adapter.external.base-url}") String baseUrl,
-                              @Value("${adapter.external.api-key}") String apiKey) {
+    public AdapterServiceImpl(
+            RestTemplate restTemplate,
+            CircuitBreaker weatherApiCircuitBreaker,
+            Retry weatherApiRetry,
+            @Value("${adapter.external.base-url}") String baseUrl,
+            @Value("${adapter.external.api-key}") String apiKey) {
         this.restTemplate = restTemplate;
+        this.weatherApiCircuitBreaker = weatherApiCircuitBreaker;
+        this.weatherApiRetry = weatherApiRetry;
         this.baseUrl = baseUrl;
         this.apiKey = apiKey;
     }
@@ -40,32 +48,24 @@ public class AdapterServiceImpl implements AdapterService {
                 .queryParam("units", "metric")
                 .build(true)
                 .toUri();
+        Supplier<ResponseEntity<OpenWeatherResponse>> supplier = () -> restTemplate.getForEntity(uri, OpenWeatherResponse.class);
 
-        ResponseEntity<Map> resp = restTemplate.getForEntity(uri, Map.class);
+        Supplier<ResponseEntity<OpenWeatherResponse>> resilientSupplier = CircuitBreaker.decorateSupplier(
+                weatherApiCircuitBreaker,
+                Retry.decorateSupplier(weatherApiRetry, supplier)
+        );
 
-        Map body = resp.getBody();
+        ResponseEntity<OpenWeatherResponse> resp = resilientSupplier.get();
+        OpenWeatherResponse body = resp.getBody();
         if (body == null) {
             return null;
         }
 
-        String name = (String) body.get("name");
-        Double temp = null;
-        Object main = body.get("main");
-        if (main instanceof Map<?, ?> m) {
-            Object temperature = m.get("temp");
-            if (temperature instanceof Number n) {
-                temp = n.doubleValue();
-            }
-        }
-
-        String desc = null;
-        Object weather = body.get("weather");
-        if (weather instanceof List<?> list && !list.isEmpty() && list.getFirst() instanceof Map<?, ?> weatherMap) {
-            Object description = weatherMap.get("description");
-            if (description != null) {
-                desc = description.toString();
-            }
-        }
+        String name = body.name();
+        Double temp = body.main() != null ? body.main().temp() : null;
+        String desc = (body.weather() != null && !body.weather().isEmpty())
+                ? body.weather().getFirst().description()
+                : null;
 
         WeatherDto dto = new WeatherDto();
         dto.setCity(name);
@@ -73,5 +73,4 @@ public class AdapterServiceImpl implements AdapterService {
         dto.setDescription(desc);
         return dto;
     }
-
 }
