@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -32,11 +31,8 @@ import static java.util.stream.Collectors.toList;
 public class WeatherServiceImpl {
 
     private final WeatherHistoryRequestRepository historyRequestRepository;
-    private final RestTemplate restTemplate;
+    private final AdapterClient adapterClient;
     private final ObjectMapper objectMapper;
-    
-    @Value("${adapter.base-url}")
-    private String adapterBaseUrl;
 
     @Value("${dump.inbox.dir}")
     private String dumpFolder;
@@ -46,9 +42,8 @@ public class WeatherServiceImpl {
             throw new IllegalArgumentException("City cannot be null or empty");
         }
         try {
-            String url = adapterBaseUrl + "/adapter/weather?city=" + city;
-            ResponseEntity<WeatherDto> response = restTemplate.getForEntity(url, WeatherDto.class);
-            
+            ResponseEntity<WeatherDto> response = adapterClient.fetchWeather(city);
+
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 WeatherDto weatherDto = response.getBody();
                 WeatherRequestHistoryEntity weatherRequestHistory = new WeatherRequestHistoryEntity();
