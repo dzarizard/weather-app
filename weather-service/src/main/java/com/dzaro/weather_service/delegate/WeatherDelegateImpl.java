@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,6 +21,8 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 public class WeatherDelegateImpl implements WeatherApiDelegate, HistoryApiDelegate, DumpApiDelegate {
+
+    private static final String IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
 
     private final WeatherServiceImpl service;
 
@@ -36,8 +40,15 @@ public class WeatherDelegateImpl implements WeatherApiDelegate, HistoryApiDelega
 
     @Override
     public ResponseEntity<DumpAcceptedDto> requestDataDump() {
-        return ResponseEntity.accepted().body(service.requestDataDump());
+        return ResponseEntity.accepted().body(service.requestDataDump(readIdempotencyKey()));
 
+    }
+
+    private String readIdempotencyKey() {
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes) {
+            return attributes.getRequest().getHeader(IDEMPOTENCY_KEY_HEADER);
+        }
+        return null;
     }
 
     @Override
