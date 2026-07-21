@@ -1,5 +1,8 @@
 package com.dzaro.weather_adapter.config;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -16,6 +19,19 @@ import java.time.Duration;
 
 @Configuration
 public class ResilienceConfig {
+
+    @Bean
+    Bulkhead weatherApiBulkhead(
+            @Value("${adapter.resilience.bulkhead.max-concurrent-calls:5}") int maxConcurrentCalls,
+            @Value("${adapter.resilience.bulkhead.max-wait-duration:0ms}") Duration maxWaitDuration) {
+
+        BulkheadConfig config = BulkheadConfig.custom()
+                .maxConcurrentCalls(maxConcurrentCalls)
+                .maxWaitDuration(maxWaitDuration)
+                .build();
+
+        return BulkheadRegistry.of(config).bulkhead("openWeatherMap");
+    }
 
     @Bean
     CircuitBreaker weatherApiCircuitBreaker(

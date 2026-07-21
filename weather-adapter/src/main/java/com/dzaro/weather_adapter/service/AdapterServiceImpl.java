@@ -1,6 +1,7 @@
 package com.dzaro.weather_adapter.service;
 
 import com.dzaro.weather_adapter.model.WeatherDto;
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.retry.Retry;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,7 @@ import java.util.function.Supplier;
 public class AdapterServiceImpl implements AdapterService {
 
     private final RestTemplate restTemplate;
+    private final Bulkhead weatherApiBulkhead;
     private final CircuitBreaker weatherApiCircuitBreaker;
     private final Retry weatherApiRetry;
     private final String baseUrl;
@@ -23,11 +25,13 @@ public class AdapterServiceImpl implements AdapterService {
 
     public AdapterServiceImpl(
             RestTemplate restTemplate,
+            Bulkhead weatherApiBulkhead,
             CircuitBreaker weatherApiCircuitBreaker,
             Retry weatherApiRetry,
             @Value("${adapter.external.base-url}") String baseUrl,
             @Value("${adapter.external.api-key}") String apiKey) {
         this.restTemplate = restTemplate;
+        this.weatherApiBulkhead = weatherApiBulkhead;
         this.weatherApiCircuitBreaker = weatherApiCircuitBreaker;
         this.weatherApiRetry = weatherApiRetry;
         this.baseUrl = baseUrl;
@@ -52,7 +56,10 @@ public class AdapterServiceImpl implements AdapterService {
 
         Supplier<ResponseEntity<OpenWeatherResponse>> resilientSupplier = CircuitBreaker.decorateSupplier(
                 weatherApiCircuitBreaker,
-                Retry.decorateSupplier(weatherApiRetry, supplier)
+                Bulkhead.decorateSupplier(
+                        weatherApiBulkhead,
+                        Retry.decorateSupplier(weatherApiRetry, supplier)
+                )
         );
 
         ResponseEntity<OpenWeatherResponse> resp = resilientSupplier.get();

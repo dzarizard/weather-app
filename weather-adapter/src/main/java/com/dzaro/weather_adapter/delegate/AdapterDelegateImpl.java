@@ -5,6 +5,7 @@ import com.dzaro.weather_adapter.api.AdapterApiDelegate;
 import com.dzaro.weather_adapter.model.WeatherDto;
 import com.dzaro.weather_adapter.service.AdapterService;
 
+import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,8 @@ public class AdapterDelegateImpl implements AdapterApiDelegate {
         try {
             WeatherDto weatherDto = adapterService.getWeather(city);
             return ResponseEntity.ok(weatherDto);
+        } catch (BulkheadFullException ex) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
         } catch (CallNotPermittedException ex) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
         } catch (RestClientResponseException ex) {
