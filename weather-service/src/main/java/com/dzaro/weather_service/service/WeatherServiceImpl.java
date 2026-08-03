@@ -26,6 +26,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -49,17 +50,36 @@ public class WeatherServiceImpl {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 WeatherDto weatherDto = response.getBody();
-                WeatherRequestHistoryEntity weatherRequestHistory = new WeatherRequestHistoryEntity();
-                weatherRequestHistory.setCity(city);
-                weatherRequestHistory.setQueryDate(OffsetDateTime.now());
-                weatherRequestHistory.setWeatherResponseJson(objectMapper.valueToTree(weatherDto));
-                historyRequestRepository.save(weatherRequestHistory);
+                saveWeatherHistory(city, weatherDto);
                 return weatherDto;
             } else {
                 throw new RuntimeException("Failed to fetch weather from adapter service");
             }
         } catch (Exception e) {
-            throw new RuntimeException("Error fetching weather data: " + e.getMessage(), e);
+            return getLatestWeatherFromHistory(city)
+                    .orElseThrow(() -> new RuntimeException("Error fetching weather data: " + e.getMessage(), e));
+        }
+    }
+
+    private void saveWeatherHistory(String city, WeatherDto weatherDto) {
+        WeatherRequestHistoryEntity weatherRequestHistory = new WeatherRequestHistoryEntity();
+        weatherRequestHistory.setCity(city);
+        weatherRequestHistory.setQueryDate(OffsetDateTime.now());
+        weatherRequestHistory.setWeatherResponseJson(objectMapper.valueToTree(weatherDto));
+        historyRequestRepository.save(weatherRequestHistory);
+    }
+
+    private Optional<WeatherDto> getLatestWeatherFromHistory(String city) {
+        return historyRequestRepository.findFirstByCityIgnoreCaseOrderByQueryDateDesc(city)
+                .map(WeatherRequestHistoryEntity::getWeatherResponseJson)
+                .map(this::toWeatherDto);
+    }
+
+    private WeatherDto toWeatherDto(com.fasterxml.jackson.databind.JsonNode weatherResponseJson) {
+        try {
+            return objectMapper.treeToValue(weatherResponseJson, WeatherDto.class);
+        } catch (Exception ex) {
+            throw new RuntimeException("Stored weather history could not be converted to WeatherDto", ex);
         }
     }
 
