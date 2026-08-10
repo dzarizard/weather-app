@@ -8,6 +8,7 @@ import com.dzaro.weather_service.model.HistoryEntry;
 import com.dzaro.weather_service.model.WeatherDto;
 import com.dzaro.weather_service.repository.IdempotencyRecordRepository;
 import com.dzaro.weather_service.repository.WeatherHistoryRequestRepository;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,6 +28,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -37,6 +39,7 @@ public class WeatherServiceImpl {
     private final IdempotencyRecordRepository idempotencyRecordRepository;
     private final AdapterClient adapterClient;
     private final ObjectMapper objectMapper;
+    private final Cache<String, WeatherDto> latestWeatherCache;
 
     @Value("${dump.inbox.dir}")
     private String dumpFolder;
@@ -51,12 +54,13 @@ public class WeatherServiceImpl {
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 WeatherDto weatherDto = response.getBody();
                 saveWeatherHistory(city, weatherDto);
+                cacheLatestWeather(city, weatherDto);
                 return weatherDto;
             } else {
                 throw new RuntimeException("Failed to fetch weather from adapter service");
             }
         } catch (Exception e) {
-            return getLatestWeatherFromHistory(city)
+            return getLatestWeatherFallback(city)
                     .orElseThrow(() -> new RuntimeException("Error fetching weather data: " + e.getMessage(), e));
         }
     }
@@ -67,6 +71,25 @@ public class WeatherServiceImpl {
         weatherRequestHistory.setQueryDate(OffsetDateTime.now());
         weatherRequestHistory.setWeatherResponseJson(objectMapper.valueToTree(weatherDto));
         historyRequestRepository.save(weatherRequestHistory);
+    }
+
+    private void cacheLatestWeather(String city, WeatherDto weatherDto) {
+        latestWeatherCache.put(normalizeCityCacheKey(city), weatherDto);
+    }
+
+    private Optional<WeatherDto> getLatestWeatherFallback(String city) {
+        Optional<WeatherDto> cachedWeather = getLatestWeatherFromCache(city);
+        if (cachedWeather.isPresent()) {
+            return cachedWeather;
+        }
+
+        Optional<WeatherDto> historicalWeather = getLatestWeatherFromHistory(city);
+        historicalWeather.ifPresent(weatherDto -> cacheLatestWeather(city, weatherDto));
+        return historicalWeather;
+    }
+
+    private Optional<WeatherDto> getLatestWeatherFromCache(String city) {
+        return Optional.ofNullable(latestWeatherCache.getIfPresent(normalizeCityCacheKey(city)));
     }
 
     private Optional<WeatherDto> getLatestWeatherFromHistory(String city) {
@@ -197,5 +220,9 @@ public class WeatherServiceImpl {
 
         String normalized = idempotencyKey.trim();
         return normalized.isEmpty() ? null : normalized;
+    }
+
+    private String normalizeCityCacheKey(String city) {
+        return city.trim().toLowerCase(Locale.ROOT);
     }
 }
