@@ -40,6 +40,7 @@ public class WeatherServiceImpl {
     private final AdapterClient adapterClient;
     private final ObjectMapper objectMapper;
     private final Cache<String, WeatherDto> latestWeatherCache;
+    private final RedisWeatherCacheService redisWeatherCacheService;
 
     @Value("${dump.inbox.dir}")
     private String dumpFolder;
@@ -48,6 +49,12 @@ public class WeatherServiceImpl {
         if (city == null || city.trim().isEmpty()) {
             throw new IllegalArgumentException("City cannot be null or empty");
         }
+
+        Optional<WeatherDto> cachedWeather = getLatestWeatherFromCache(city);
+        if (cachedWeather.isPresent()) {
+            return cachedWeather.get();
+        }
+
         try {
             ResponseEntity<WeatherDto> response = adapterClient.fetchWeather(city);
 
@@ -74,7 +81,9 @@ public class WeatherServiceImpl {
     }
 
     private void cacheLatestWeather(String city, WeatherDto weatherDto) {
-        latestWeatherCache.put(normalizeCityCacheKey(city), weatherDto);
+        String normalizedCityKey = normalizeCityCacheKey(city);
+        latestWeatherCache.put(normalizedCityKey, weatherDto);
+        redisWeatherCacheService.put(normalizedCityKey, weatherDto);
     }
 
     private Optional<WeatherDto> getLatestWeatherFallback(String city) {
@@ -89,7 +98,15 @@ public class WeatherServiceImpl {
     }
 
     private Optional<WeatherDto> getLatestWeatherFromCache(String city) {
-        return Optional.ofNullable(latestWeatherCache.getIfPresent(normalizeCityCacheKey(city)));
+        String normalizedCityKey = normalizeCityCacheKey(city);
+        WeatherDto localCached = latestWeatherCache.getIfPresent(normalizedCityKey);
+        if (localCached != null) {
+            return Optional.of(localCached);
+        }
+
+        Optional<WeatherDto> redisCached = redisWeatherCacheService.get(normalizedCityKey);
+        redisCached.ifPresent(weatherDto -> latestWeatherCache.put(normalizedCityKey, weatherDto));
+        return redisCached;
     }
 
     private Optional<WeatherDto> getLatestWeatherFromHistory(String city) {

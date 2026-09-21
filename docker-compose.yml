@@ -25,6 +25,14 @@ services:
     volumes:
       - mongo-data:/data/db
 
+  redis:
+    image: redis:7
+    container_name: weather-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
   weather-adapter:
     build: ./weather-adapter
     container_name: weather-adapter
@@ -46,6 +54,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/weatherdb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      WEATHER_CACHE_REDIS_ENABLED: true
+      WEATHER_CACHE_REDIS_TTL: 5m
       DUMP_INBOX_DIR: /inbox
     volumes:
       - ./inbox:/inbox
@@ -54,6 +66,7 @@ services:
     depends_on:
       - postgres
       - weather-adapter
+      - redis
 
   file-service:
     build: ./file-service
@@ -72,3 +85,4 @@ services:
 volumes:
   pg-data:
   mongo-data:
+  redis-data:
