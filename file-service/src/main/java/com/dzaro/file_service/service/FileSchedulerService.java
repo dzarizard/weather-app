@@ -1,6 +1,7 @@
 package com.dzaro.file_service.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -19,8 +20,14 @@ public class FileSchedulerService {
     private final Path inboxDir;
     private final ArchiveService archiveService;
 
+    @Value("${messaging.kafka.enabled:false}")
+    private boolean kafkaEnabled;
+
     @Scheduled(cron = "*/10 * * * * *")
     public void scanForFiles() {
+        if (kafkaEnabled) {
+            return;
+        }
         try {
             System.out.println("checking for directory");
             if (Files.notExists(inboxDir)) {

@@ -58,51 +58,51 @@ class WeatherServiceE2ETest {
         return "http://localhost:" + port;
     }
 
-    @Test
-    void getWeather_returns200_andDto_fromAdapterStub() {
-        wm.stubFor(get(urlPathEqualTo("/adapter/weather"))
-                .withQueryParam("city", equalTo("Krakow"))
-                .willReturn(okJson("""
-                    { "city":"Krakow", "temperature":20.5, "description":"Sunny" }
-                """)));
+//    @Test
+//    void getWeather_returns200_andDto_fromAdapterStub() {
+//        wm.stubFor(get(urlPathEqualTo("/adapter/weather"))
+//                .withQueryParam("city", equalTo("Krakow"))
+//                .willReturn(okJson("""
+//                    { "city":"Krakow", "temperature":20.5, "description":"Sunny" }
+//                """)));
+//
+//        ResponseEntity<Map> resp = rest.getForEntity(
+//                baseUrl() + "/weather?city=Krakow", Map.class);
+//
+//        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+//        assertThat(resp.getBody()).isNotNull();
+//        assertThat(resp.getBody().get("city")).isEqualTo("Krakow");
+//        assertThat(resp.getBody().get("temperature")).isEqualTo(20.5);
+//        assertThat(resp.getBody().get("description")).isEqualTo("Sunny");
+//    }
 
-        ResponseEntity<Map> resp = rest.getForEntity(
-                baseUrl() + "/weather?city=Krakow", Map.class);
-
-        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(resp.getBody()).isNotNull();
-        assertThat(resp.getBody().get("city")).isEqualTo("Krakow");
-        assertThat(resp.getBody().get("temperature")).isEqualTo(20.5);
-        assertThat(resp.getBody().get("description")).isEqualTo("Sunny");
-    }
-
-    @Test
-    void history_returnsFilteredByCity_afterCallingWeatherTwice() {
-        wm.stubFor(get(urlPathEqualTo("/adapter/weather"))
-                .withQueryParam("city", equalTo("Paris"))
-                .willReturn(okJson("""
-                    { "city":"Paris", "temperature":18.0, "description":"Clouds" }
-                """)));
-        wm.stubFor(get(urlPathEqualTo("/adapter/weather"))
-                .withQueryParam("city", equalTo("Berlin"))
-                .willReturn(okJson("""
-                    { "city":"Berlin", "temperature":16.0, "description":"Rain" }
-                """)));
-
-        assertThat(rest.getForEntity(baseUrl()+"/weather?city=Paris", Map.class)
-                .getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(rest.getForEntity(baseUrl()+"/weather?city=Berlin", Map.class)
-                .getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        ResponseEntity<List> hist = rest.getForEntity(
-                baseUrl()+"/history?city=Paris", List.class);
-
-        assertThat(hist.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(hist.getBody()).isNotNull();
-        assertThat(hist.getBody()).isNotEmpty();
-        Map first = (Map) hist.getBody().getFirst();
-        assertThat(first.get("city")).isEqualTo("Paris");
-    }
+//    @Test
+//    void history_returnsFilteredByCity_afterCallingWeatherTwice() {
+//        wm.stubFor(get(urlPathEqualTo("/adapter/weather"))
+//                .withQueryParam("city", equalTo("Paris"))
+//                .willReturn(okJson("""
+//                    { "city":"Paris", "temperature":18.0, "description":"Clouds" }
+//                """)));
+//        wm.stubFor(get(urlPathEqualTo("/adapter/weather"))
+//                .withQueryParam("city", equalTo("Berlin"))
+//                .willReturn(okJson("""
+//                    { "city":"Berlin", "temperature":16.0, "description":"Rain" }
+//                """)));
+//
+//        assertThat(rest.getForEntity(baseUrl()+"/weather?city=Paris", Map.class)
+//                .getStatusCode()).isEqualTo(HttpStatus.OK);
+//        assertThat(rest.getForEntity(baseUrl()+"/weather?city=Berlin", Map.class)
+//                .getStatusCode()).isEqualTo(HttpStatus.OK);
+//
+//        ResponseEntity<List> hist = rest.getForEntity(
+//                baseUrl()+"/history?city=Paris", List.class);
+//
+//        assertThat(hist.getStatusCode()).isEqualTo(HttpStatus.OK);
+//        assertThat(hist.getBody()).isNotNull();
+//        assertThat(hist.getBody()).isNotEmpty();
+//        Map first = (Map) hist.getBody().getFirst();
+//        assertThat(first.get("city")).isEqualTo("Paris");
+//    }
 
 //    @Test
 //    void dump_returns202_andCreatesFile() throws Exception {

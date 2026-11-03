@@ -3,6 +3,9 @@ package com.dzaro.weather_service.service;
 import com.dzaro.weather_service.entity.IdempotencyRecordEntity;
 import com.dzaro.weather_service.entity.IdempotencyStatus;
 import com.dzaro.weather_service.entity.WeatherRequestHistoryEntity;
+import com.dzaro.weather_service.event.DumpRequestedEvent;
+import com.dzaro.weather_service.messaging.DumpEventPublisher;
+import com.dzaro.weather_service.event.DumpRequestedEvent;
 import com.dzaro.weather_service.model.DumpAcceptedDto;
 import com.dzaro.weather_service.model.HistoryEntry;
 import com.dzaro.weather_service.model.WeatherDto;
@@ -41,9 +44,13 @@ public class WeatherServiceImpl {
     private final ObjectMapper objectMapper;
     private final Cache<String, WeatherDto> latestWeatherCache;
     private final RedisWeatherCacheService redisWeatherCacheService;
+    private final DumpEventPublisher dumpEventPublisher;
 
     @Value("${dump.inbox.dir}")
     private String dumpFolder;
+
+    @Value("${messaging.kafka.enabled:false}")
+    private boolean kafkaEnabled;
 
     public WeatherDto getWeather(String city) {
         if (city == null || city.trim().isEmpty()) {
@@ -155,7 +162,8 @@ public class WeatherServiceImpl {
         try {
             String normalizedIdempotencyKey = normalizeIdempotencyKey(idempotencyKey);
             if (normalizedIdempotencyKey == null) {
-                String requestId = createDumpFile();
+                String requestId = UUID.randomUUID().toString();
+                createDumpArtifact(requestId);
                 return new DumpAcceptedDto()
                         .requestId(requestId)
                         .message("Dump request accepted without idempotency key.");
@@ -187,7 +195,7 @@ public class WeatherServiceImpl {
         }
 
         try {
-            createDumpFile(requestId);
+            createDumpArtifact(requestId);
             record.setStatus(IdempotencyStatus.COMPLETED);
             idempotencyRecordRepository.save(record);
             return new DumpAcceptedDto()
@@ -209,15 +217,34 @@ public class WeatherServiceImpl {
                 .message(message);
     }
 
-    private String createDumpFile() throws Exception {
-        return createDumpFile(UUID.randomUUID().toString());
+    private void createDumpArtifact(String requestId) throws Exception {
+        if (kafkaEnabled) {
+            publishDumpEvent(requestId);
+            return;
+        }
+        createDumpFile(requestId);
     }
 
-    private String createDumpFile(String requestId) throws Exception {
-        List<HistoryEntry> payload = historyRequestRepository.findAllByOrderByQueryDateDesc()
+    private List<HistoryEntry> loadDumpPayload() {
+        return historyRequestRepository.findAllByOrderByQueryDateDesc()
                 .stream()
                 .map(this::toDto)
                 .toList();
+    }
+
+    private void publishDumpEvent(String requestId) throws Exception {
+        List<HistoryEntry> payload = loadDumpPayload();
+        DumpRequestedEvent event = DumpRequestedEvent.builder()
+                .requestId(requestId)
+                .sourceFileName("history-" + requestId + ".json")
+                .payloadJson(objectMapper.writeValueAsString(payload))
+                .createdAt(OffsetDateTime.now())
+                .build();
+        dumpEventPublisher.publish(event);
+    }
+
+    private void createDumpFile(String requestId) throws Exception {
+        List<HistoryEntry> payload = loadDumpPayload();
 
         Path dir = Paths.get(dumpFolder);
         Files.createDirectories(dir);
@@ -227,7 +254,6 @@ public class WeatherServiceImpl {
                 file, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW)) {
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(writer, payload);
         }
-        return requestId;
     }
 
     private String normalizeIdempotencyKey(String idempotencyKey) {

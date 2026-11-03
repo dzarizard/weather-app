@@ -1,6 +1,7 @@
 package com.dzaro.file_service.service;
 
 import com.dzaro.file_service.entity.WeatherArchiveDocument;
+import com.dzaro.file_service.event.DumpRequestedEvent;
 import com.dzaro.file_service.repository.WeatherArchiveRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,6 +26,14 @@ public class ArchiveService {
                 .processedAt(Instant.now())
                 .build();
         repository.save(doc);
+    }
+
+    public void processDumpEvent(DumpRequestedEvent event) throws Exception {
+        if (event == null || event.getPayloadJson() == null) {
+            return;
+        }
+        String fileName = event.getSourceFileName() == null ? "kafka-dump.json" : event.getSourceFileName();
+        processJson(fileName, event.getPayloadJson());
     }
 
     public long getArchiveCount() {
